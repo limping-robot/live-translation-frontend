@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 function makeUttId() {
   // Safari support: fallback if crypto.randomUUID isn't there
@@ -11,29 +11,110 @@ export default function App() {
   const [running, setRunning] = useState(false);
   const [lines, setLines] = useState([]);
 
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState(null);
+  const [authError, setAuthError] = useState(null);
+
   const wsRef = useRef(null);
   const ctxRef = useRef(null);
   const streamRef = useRef(null);
 
   const proto = window.location.protocol === "https:" ? "wss" : "ws";
-  const wsUrl = `${proto}://${window.location.host}/ws`;
+
+  function buildWsUrl(jwtToken) {
+    const base = `${proto}://${window.location.host}/ws`;
+    return `${base}?token=${encodeURIComponent(jwtToken)}`;
+  }
+
+  // Load token from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("access_token");
+    if (saved) {
+      setToken(saved);
+    }
+  }, []);
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setAuthError(null);
+
+    try {
+      const res = await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAuthError(data.error || "Login failed");
+        return;
+      }
+
+      const data = await res.json();
+      if (data.access_token) {
+        setToken(data.access_token);
+        localStorage.setItem("access_token", data.access_token);
+        setAuthError(null);
+      } else {
+        setAuthError("No token returned from server");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setAuthError("Network or server error");
+    }
+  }
+
+  function handleLogout() {
+    setToken(null);
+    localStorage.removeItem("access_token");
+    setConnected(false);
+    if (running) {
+      stop();
+    }
+  }
 
   async function start() {
     if (running) return;
+    if (!token) {
+      setAuthError("Please log in first.");
+      return;
+    }
 
+    const wsUrl = buildWsUrl(token);
     const ws = new WebSocket(wsUrl);
     ws.binaryType = "arraybuffer";
 
-    ws.binaryType = "arraybuffer";
-
     ws.onopen = () => setConnected(true);
-    ws.onclose = () => setConnected(false);
-    ws.onerror = () => setConnected(false);
+    ws.onclose = () => {
+      setConnected(false);
+      setRunning(false);
+    };
+    ws.onerror = () => {
+      setConnected(false);
+      setRunning(false);
+    };
 
     ws.onmessage = (ev) => {
-      const msg = JSON.parse(ev.data);
+      let msg;
+      try {
+        msg = JSON.parse(ev.data);
+      } catch {
+        return;
+      }
+
+      if (msg.type === "error" && msg.message === "unauthorized") {
+        setAuthError("Unauthorized WebSocket connection. Please log in again.");
+        handleLogout();
+        return;
+      }
+
       if (msg.type === "result") {
-        setLines((prev) => [{ uttId: msg.uttId, en: msg.en, tl: msg.tl }, ...prev]);
+        setLines((prev) => [
+          { uttId: msg.uttId, en: msg.en, tl: msg.tl },
+          ...prev,
+        ]);
       }
     };
 
@@ -89,23 +170,92 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 900 }}>
-      <h2>Realtime EN → TL (utterance-based)</h2>
+      <div
+          style={{
+            padding: 16,
+            fontFamily: "system-ui, sans-serif",
+            maxWidth: 900,
+          }}
+      >
+        <h2>Realtime EN → TL (utterance-based)</h2>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <button onClick={start} disabled={running}>Start</button>
-        <button onClick={stop} disabled={!running}>Stop</button>
-        <span>Status: {connected ? "connected" : "disconnected"}</span>
-      </div>
+        {/* Auth box */}
+        <div
+            style={{
+              marginBottom: 16,
+              padding: 12,
+              border: "1px solid #ddd",
+              borderRadius: 8,
+            }}
+        >
+          {token ? (
+              <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "space-between",
+                  }}
+              >
+                <span>Logged in</span>
+                <button onClick={handleLogout}>Log out</button>
+              </div>
+          ) : (
+              <form
+                  onSubmit={handleLogin}
+                  style={{ display: "flex", gap: 8, alignItems: "center" }}
+              >
+                <input
+                    type="text"
+                    placeholder="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <button type="submit">Log in</button>
+              </form>
+          )}
+          {authError && (
+              <div style={{ marginTop: 8, color: "red", fontSize: 14 }}>
+                {authError}
+              </div>
+          )}
+        </div>
 
-      <div style={{ marginTop: 16 }}>
-        {lines.map((l) => (
-          <div key={l.uttId} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid #ddd" }}>
-            <div><b>EN:</b> {l.en}</div>
-            <div><b>TL:</b> {l.tl}</div>
-          </div>
-        ))}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button onClick={start} disabled={running || !token}>
+            Start
+          </button>
+          <button onClick={stop} disabled={!running}>
+            Stop
+          </button>
+          <span>Status: {connected ? "connected" : "disconnected"}</span>
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          {lines.map((l) => (
+              <div
+                  key={l.uttId}
+                  style={{
+                    marginBottom: 14,
+                    paddingBottom: 14,
+                    borderBottom: "1px solid #ddd",
+                  }}
+              >
+                <div>
+                  <b>EN:</b> {l.en}
+                </div>
+                <div>
+                  <b>TL:</b> {l.tl}
+                </div>
+              </div>
+          ))}
+        </div>
       </div>
-    </div>
   );
 }
