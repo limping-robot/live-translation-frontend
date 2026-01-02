@@ -1,0 +1,11 @@
+limping-robot-labs.xyz {
+    root * /usr/share/caddy
+    file_server
+
+    # Proxy REST API to backend container
+    reverse_proxy /auth backend:5000
+    reverse_proxy /health backend:5000
+
+    # WebSocket proxy
+    reverse_proxy /ws backend:5000
+}
