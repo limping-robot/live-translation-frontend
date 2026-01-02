@@ -1,11 +1,15 @@
 translate.limping-robot-labs.xyz {
     root * /usr/share/caddy
+    encode gzip
+
+    # Proxy all /auth* and /health* paths to the backend
+    @api path /auth* /health*
+    reverse_proxy @api backend:5000
+
+    # WebSocket proxy (match prefix as well)
+    reverse_proxy /ws* backend:5000
+
+    # SPA: serve index.html for everything else
+    try_files {path} /index.html
     file_server
-
-    # Proxy REST API to backend container
-    reverse_proxy /auth backend:5000
-    reverse_proxy /health backend:5000
-
-    # WebSocket proxy
-    reverse_proxy /ws backend:5000
 }
