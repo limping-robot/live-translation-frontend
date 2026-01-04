@@ -399,6 +399,12 @@ export default function App() {
                   transition: "all 0.2s ease",
                   transform: isPressing ? "scale(0.95)" : "scale(1)",
                   outline: "none",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  WebkitTouchCallout: "none",
+                  WebkitTapHighlightColor: "transparent",
+                  msUserSelect: "none",
+                  touchAction: "manipulation",
                 }}
             />
             <div style={{ textAlign: "center" }}>
