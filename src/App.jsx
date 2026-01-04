@@ -56,6 +56,16 @@ export default function App() {
     }
   }, [token]);
 
+  // Request microphone access after WebSocket is connected
+  useEffect(() => {
+    if (connected && token && !running) {
+      initializeAudio().catch((err) => {
+        console.error("Failed to initialize audio:", err);
+        setAuthError("Failed to access microphone. Please check permissions.");
+      });
+    }
+  }, [connected, token]);
+
   async function handleLogin(e) {
     e.preventDefault();
     setAuthError(null);
@@ -219,6 +229,7 @@ export default function App() {
       return;
     }
     
+    // Audio should already be initialized after login, but check just in case
     if (!running) {
       await initializeAudio();
     }
@@ -263,7 +274,7 @@ export default function App() {
             }}
         >
           <h2 style={{ marginTop: 0, marginBottom: 24, textAlign: "center" }}>
-            Realtime EN → TL (utterance-based)
+            Realtime English to Tagalog
           </h2>
 
           {/* Auth box */}
@@ -381,8 +392,6 @@ export default function App() {
                   border: "none",
                   backgroundColor: isPressing ? "#f44336" : (connected ? "#4caf50" : "#9e9e9e"),
                   color: "white",
-                  fontSize: 18,
-                  fontWeight: 600,
                   cursor: token ? "pointer" : "not-allowed",
                   boxShadow: isPressing
                       ? "0 4px 20px rgba(244, 67, 54, 0.4)"
@@ -391,12 +400,26 @@ export default function App() {
                   transform: isPressing ? "scale(0.95)" : "scale(1)",
                   outline: "none",
                 }}
-            >
-              {isPressing ? "🎤" : "🎙️"}
-            </button>
+            />
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 14, color: "#666", marginBottom: 4 }}>
-                {isPressing ? "Listening..." : "Hold to talk"}
+              <div 
+                  style={{ 
+                    fontSize: 14, 
+                    color: "#666", 
+                    marginBottom: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                    msUserSelect: "none",
+                  }}
+              >
+                <span style={{ fontSize: 18 }}>
+                  {isPressing ? "🎤" : "🎙️"}
+                </span>
+                <span>{isPressing ? "Listening..." : "Hold to talk"}</span>
               </div>
               <div style={{ fontSize: 12, color: "#999" }}>
                 Status: {connected ? "✓ Connected" : "Disconnected"}
