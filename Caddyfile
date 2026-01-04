@@ -1,11 +1,14 @@
+{
+  acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
 translate.limping-robot-labs.xyz {
-    root * /usr/share/caddy
-    file_server
+  root * /usr/share/caddy
+  file_server
 
-    # Proxy REST API to backend container
-    reverse_proxy /login backend:5000
-    reverse_proxy /health backend:5000
+  @api path /login* /health*
+  reverse_proxy @api backend:5000
 
-    # WebSocket proxy
-    reverse_proxy /ws backend:5000
+  @ws path /ws*
+  reverse_proxy @ws backend:5000
 }
