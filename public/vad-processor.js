@@ -32,6 +32,26 @@ class VADProcessor extends AudioWorkletProcessor {
     this.noiseAlpha = 0.02;
     this.threshMult = 3.0;
     this.threshMin = 0.008;
+
+    // Set up message handler for force-end commands
+    this.port.onmessage = (ev) => {
+      if (ev.data && ev.data.type === "force_end") {
+        this.forceEndUtterance();
+      }
+    };
+  }
+
+  forceEndUtterance() {
+    if (this.inUtt && this.frames.length >= this.minUtteranceFrames) {
+      // Emit the current utterance immediately
+      this.emitUtterance();
+    }
+    // Reset state
+    this.inUtt = false;
+    this.frames = [];
+    this.silentFrames = 0;
+    this.speechRun = 0;
+    this.preroll = [];
   }
 
   rms(x) {
