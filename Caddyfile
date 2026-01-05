@@ -1,7 +1,3 @@
-{
-  acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
-}
-
 translate.limping-robot-labs.xyz {
   root * /usr/share/caddy
   file_server
