@@ -138,7 +138,7 @@ export default function App() {
 
       if (msg.type === "result") {
         setLines((prev) => [
-          { uttId: msg.uttId, en: msg.en, tl: msg.tl },
+          { uttId: msg.uttId, source: msg.source, target: msg.target },
           ...prev,
         ]);
       }
@@ -274,7 +274,7 @@ export default function App() {
             }}
         >
           <h2 style={{ marginTop: 0, marginBottom: 24, textAlign: "center" }}>
-            Realtime Tagalog to English
+            Realtime German to English
           </h2>
 
           {/* Auth box */}
@@ -459,12 +459,12 @@ export default function App() {
                           }}
                       >
                         <div style={{ marginBottom: 8 }}>
-                          <b style={{ color: "#666" }}>TL:</b>{" "}
-                          <span style={{ color: "#333" }}>{l.tl}</span>
+                          <b style={{ color: "#666" }}>DE:</b>{" "}
+                          <span style={{ color: "#333" }}>{l.source}</span>
                         </div>
                         <div>
                           <b style={{ color: "#666" }}>EN:</b>{" "}
-                          <span style={{ color: "#2196f3", fontWeight: 500 }}>{l.en}</span>
+                          <span style={{ color: "#2196f3", fontWeight: 500 }}>{l.target}</span>
                         </div>
                       </div>
                   ))}
