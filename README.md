@@ -1,10 +1,10 @@
-# Realtime English to Tagalog Translation
+# Realtime Tagalog to English Translation
 
-Real-time speech-to-speech translation from English to Tagalog using push-to-talk.
+Real-time speech-to-speech translation from Tagalog to English using push-to-talk.
 
 ## Overview
 
-A web application that transcribes English speech and translates it to Tagalog. Uses a push-to-talk button to control recording, with automatic voice activity detection (VAD) and real-time WebSocket communication.
+A web application that transcribes Tagalog speech and translates it to English. Uses a push-to-talk button to control recording, with automatic voice activity detection (VAD) and real-time WebSocket communication.
 
 ## Features
 
@@ -81,7 +81,7 @@ server: {
 1. Enter username and password to log in
 2. Grant microphone permissions when prompted
 3. Hold the circular button to start recording
-4. Speak in English
+4. Speak in Tagalog
 5. Release the button to send the utterance
 6. View translations in the results list below
 
