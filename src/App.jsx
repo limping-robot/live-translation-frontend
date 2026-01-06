@@ -274,7 +274,7 @@ export default function App() {
             }}
         >
           <h2 style={{ marginTop: 0, marginBottom: 24, textAlign: "center" }}>
-            Realtime German to English
+            Realtime Tagalog to English
           </h2>
 
           {/* Auth box */}
@@ -459,7 +459,7 @@ export default function App() {
                           }}
                       >
                         <div style={{ marginBottom: 8 }}>
-                          <b style={{ color: "#666" }}>DE:</b>{" "}
+                          <b style={{ color: "#666" }}>TL:</b>{" "}
                           <span style={{ color: "#333" }}>{l.source}</span>
                         </div>
                         <div>
