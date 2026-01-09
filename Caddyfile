@@ -1,4 +1,4 @@
-translate.limping-robot-labs.xyz {
+translate.limpingrobot.com {
   root * /usr/share/caddy
   file_server
 
